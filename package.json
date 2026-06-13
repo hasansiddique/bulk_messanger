@@ -9,7 +9,7 @@
     "dev:web": "nx serve web",
     "dev:mobile": "nx serve mobile",
     "build": "nx run-many -t build --all",
-    "build:api": "nx run database:generate && nx build api",
+    "build:api": "nx run database:generate && SKIP_ENV_VALIDATION=1 nx build api",
     "start": "sh -c 'cd apps/api && ../../node_modules/.bin/next start --hostname 0.0.0.0 --port \"${PORT:-3000}\"'",
     "start:api": "pnpm start",
     "postinstall": "prisma generate --schema=packages/database/prisma/schema.prisma",
