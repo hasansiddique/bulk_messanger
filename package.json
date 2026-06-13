@@ -56,10 +56,12 @@
       "@prisma/client",
       "@prisma/engines",
       "prisma"
-    ]
+    ],
+    "overrides": {
+      "ioredis": "^5.11.1"
+    }
   },
   "dependencies": {
-    "@capacitor-community/contacts": "^7.2.0",
     "@capacitor/android": "^8.4.0",
     "@capacitor/app": "^8.1.0",
     "@capacitor/cli": "^8.4.0",
@@ -68,6 +70,7 @@
     "@capacitor/ios": "^8.4.0",
     "@capacitor/keyboard": "^8.0.3",
     "@capacitor/status-bar": "^8.0.2",
+    "@capgo/capacitor-contacts": "^8.0.13",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@hookform/resolvers": "^5.4.0",

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Alert,
-  AppBar,
   Box,
   Button,
   CircularProgress,
@@ -14,10 +13,10 @@ import {
   ListItemText,
   Stack,
   TextField,
-  Toolbar,
   Typography,
 } from '@mui/material';
-import { FiArrowLeft, FiPlus, FiTrash2 } from 'react-icons/fi';
+import { FiPlus, FiTrash2 } from 'react-icons/fi';
+import { MobileAppBar } from '../components/mobile-app-bar';
 import { TEST_RECIPIENTS } from '@bulk-messanger/whatsapp';
 import { isValidPhoneNumber, normalizePhoneNumber } from '../lib/phone-numbers';
 import { trpc } from '../lib/trpc';
@@ -81,17 +80,8 @@ export function ComposeMessagePage() {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <AppBar position="static" elevation={0} color="transparent">
-        <Toolbar>
-          <IconButton edge="start" onClick={() => navigate('/home')} aria-label="back">
-            <FiArrowLeft />
-          </IconButton>
-          <Typography variant="h6" fontWeight={700} sx={{ flexGrow: 1 }}>
-            New message
-          </Typography>
-        </Toolbar>
-      </AppBar>
+    <Box sx={{ minHeight: '100dvh', bgcolor: 'background.default' }}>
+      <MobileAppBar title="New message" onBack={() => navigate('/home')} />
 
       <Container maxWidth="sm" sx={{ py: 3, pb: 12 }}>
         <Stack spacing={3}>

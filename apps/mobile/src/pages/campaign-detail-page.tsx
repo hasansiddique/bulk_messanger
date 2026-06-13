@@ -3,21 +3,18 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import {
   Alert,
-  AppBar,
   Box,
   Chip,
   CircularProgress,
   Container,
-  IconButton,
   LinearProgress,
   List,
   ListItem,
   ListItemText,
   Stack,
-  Toolbar,
   Typography,
 } from '@mui/material';
-import { FiArrowLeft } from 'react-icons/fi';
+import { MobileAppBar } from '../components/mobile-app-bar';
 import { trpc } from '../lib/trpc';
 
 const messageStatusLabel = {
@@ -96,17 +93,8 @@ export function CampaignDetailPage() {
   }, [campaign]);
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <AppBar position="static" elevation={0} color="transparent">
-        <Toolbar>
-          <IconButton edge="start" onClick={() => navigate('/campaigns')} aria-label="back">
-            <FiArrowLeft />
-          </IconButton>
-          <Typography variant="h6" fontWeight={700}>
-            Campaign details
-          </Typography>
-        </Toolbar>
-      </AppBar>
+    <Box sx={{ minHeight: '100dvh', bgcolor: 'background.default' }}>
+      <MobileAppBar title="Campaign details" onBack={() => navigate('/campaigns')} />
 
       <Container maxWidth="sm" sx={{ py: 3 }}>
         {!campaign ? (

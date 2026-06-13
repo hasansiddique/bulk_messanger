@@ -8,33 +8,26 @@ import {
   ListItemText,
   Typography,
 } from '@mui/material';
-import { trpc } from '../lib/trpc';
+import { useContacts } from '../hooks/use-contacts';
 
 type ContactPickerProps = {
   selectedIds: Set<string>;
   onToggle: (contactId: string) => void;
-  onSelectAll?: (contactIds: string[]) => void;
   search?: string;
 };
 
-export function ContactPicker({
-  selectedIds,
-  onToggle,
-  search,
-}: ContactPickerProps) {
-  const { data: contacts, isLoading, error } = trpc.listContacts.useQuery({
-    search: search?.trim() || undefined,
-  });
+export function ContactPicker({ selectedIds, onToggle, search }: ContactPickerProps) {
+  const { contacts, isLoading, error } = useContacts(search);
 
   if (isLoading) {
     return <Typography color="text.secondary">Loading contacts...</Typography>;
   }
 
   if (error) {
-    return <Typography color="error">{error.message}</Typography>;
+    return <Typography color="error">{error}</Typography>;
   }
 
-  if (!contacts?.length) {
+  if (!contacts.length) {
     return (
       <Typography color="text.secondary">
         No contacts found. Add contacts to your phonebook first.
@@ -45,17 +38,19 @@ export function ContactPicker({
   return (
     <List
       dense
+      disablePadding
       sx={{
         bgcolor: 'background.paper',
         borderRadius: 2,
         border: '1px solid',
         borderColor: 'divider',
+        overflow: 'hidden',
       }}
     >
-      {contacts.map((contact) => (
-        <ListItem key={contact.id} disablePadding>
-          <ListItemButton onClick={() => onToggle(contact.id)}>
-            <ListItemIcon>
+      {contacts.map((contact, index) => (
+        <ListItem key={contact.id} disablePadding divider={index < contacts.length - 1}>
+          <ListItemButton onClick={() => onToggle(contact.id)} sx={{ py: 1.25 }}>
+            <ListItemIcon sx={{ minWidth: 42 }}>
               <Checkbox
                 edge="start"
                 checked={selectedIds.has(contact.id)}
@@ -66,6 +61,7 @@ export function ContactPicker({
             <ListItemText
               primary={contact.name}
               secondary={`+${contact.phoneNumber}`}
+              primaryTypographyProps={{ fontWeight: 600 }}
             />
           </ListItemButton>
         </ListItem>

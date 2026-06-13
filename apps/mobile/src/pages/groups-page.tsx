@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Alert,
-  AppBar,
   Box,
   Button,
   CircularProgress,
@@ -19,10 +18,10 @@ import {
   ListItemButton,
   ListItemText,
   Stack,
-  Toolbar,
   Typography,
 } from '@mui/material';
-import { FiArrowLeft, FiPlus, FiTrash2 } from 'react-icons/fi';
+import { FiPlus, FiTrash2 } from 'react-icons/fi';
+import { MobileAppBar } from '../components/mobile-app-bar';
 import { trpc } from '../lib/trpc';
 
 export function GroupsPage() {
@@ -46,17 +45,8 @@ export function GroupsPage() {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <AppBar position="static" elevation={0} color="transparent">
-        <Toolbar>
-          <IconButton edge="start" onClick={() => navigate('/home')} aria-label="back">
-            <FiArrowLeft />
-          </IconButton>
-          <Typography variant="h6" fontWeight={700} sx={{ flexGrow: 1 }}>
-            Contact groups
-          </Typography>
-        </Toolbar>
-      </AppBar>
+    <Box sx={{ minHeight: '100dvh', bgcolor: 'background.default' }}>
+      <MobileAppBar title="Contact groups" onBack={() => navigate('/home')} />
 
       <Container maxWidth="sm" sx={{ py: 3, pb: 10 }}>
         {isLoading && (
@@ -117,7 +107,11 @@ export function GroupsPage() {
         color="primary"
         aria-label="create group"
         onClick={() => navigate('/groups/new')}
-        sx={{ position: 'fixed', bottom: 24, right: 24 }}
+        sx={{
+          position: 'fixed',
+          bottom: 'calc(24px + env(safe-area-inset-bottom))',
+          right: 'calc(24px + env(safe-area-inset-right))',
+        }}
       >
         <FiPlus size={24} />
       </Fab>

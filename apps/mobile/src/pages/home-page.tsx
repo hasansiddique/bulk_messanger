@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import {
-  AppBar,
   Box,
   Button,
   Card,
@@ -11,9 +10,9 @@ import {
   Fab,
   ListItemIcon,
   Stack,
-  Toolbar,
   Typography,
 } from '@mui/material';
+import { MobileAppBar } from '../components/mobile-app-bar';
 import {
   FiBook,
   FiDownload,
@@ -25,9 +24,11 @@ import {
   FiUserPlus,
   FiUsers,
 } from 'react-icons/fi';
-import { authClient } from '../lib/auth';
+import { authClient, clearMobileAuthSession } from '../lib/auth';
 import { trpc } from '../lib/trpc';
 import { useAuthStore } from '../stores/auth-store';
+import { useContactsStore } from '../stores/contacts-store';
+import { useTemplatesStore } from '../stores/templates-store';
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -42,7 +43,10 @@ export function HomePage() {
 
   const handleSignOut = async () => {
     await authClient.signOut();
+    clearMobileAuthSession();
     setUser(null);
+    useContactsStore.getState().reset();
+    useTemplatesStore.getState().reset();
     navigate('/login');
   };
 
@@ -92,21 +96,20 @@ export function HomePage() {
   ];
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <AppBar position="static" elevation={0} color="transparent">
-        <Toolbar sx={{ justifyContent: 'space-between' }}>
-          <Typography variant="h6" color="primary" fontWeight={700}>
-            Bulk Messanger
-          </Typography>
+    <Box sx={{ minHeight: '100dvh', bgcolor: 'background.default' }}>
+      <MobileAppBar
+        title="Bulk Messanger"
+        rightAction={
           <Button
             variant="outlined"
+            size="small"
             startIcon={<FiLogOut />}
             onClick={handleSignOut}
           >
             Sign out
           </Button>
-        </Toolbar>
-      </AppBar>
+        }
+      />
 
       <Container maxWidth="sm" sx={{ py: 3, pb: 10 }}>
         <Stack spacing={3}>
@@ -181,8 +184,8 @@ export function HomePage() {
         onClick={() => navigate('/templates')}
         sx={{
           position: 'fixed',
-          bottom: 24,
-          right: 24,
+          bottom: 'calc(24px + env(safe-area-inset-bottom))',
+          right: 'calc(24px + env(safe-area-inset-right))',
         }}
       >
         <FiPlus size={24} />

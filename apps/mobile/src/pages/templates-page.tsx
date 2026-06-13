@@ -1,45 +1,64 @@
 import { useNavigate } from 'react-router-dom';
 import {
   Alert,
-  AppBar,
   Box,
+  Button,
   Card,
   CardActionArea,
   CardContent,
   Chip,
   CircularProgress,
   Container,
-  IconButton,
   Stack,
-  Toolbar,
   Typography,
 } from '@mui/material';
-import { FiArrowLeft } from 'react-icons/fi';
-import { trpc } from '../lib/trpc';
+import { FiEdit3 } from 'react-icons/fi';
+import { MobileAppBar } from '../components/mobile-app-bar';
+import { useTemplates } from '../hooks/use-templates';
 
 export function TemplatesPage() {
   const navigate = useNavigate();
-  const { data: templates, isLoading, error, refetch, isFetching } =
-    trpc.listWhatsAppTemplates.useQuery();
+  const { templates, isLoading, isRefreshing, error, refresh } = useTemplates();
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <AppBar position="static" elevation={0} color="transparent">
-        <Toolbar>
-          <IconButton edge="start" onClick={() => navigate('/home')} aria-label="back">
-            <FiArrowLeft />
-          </IconButton>
-          <Typography variant="h6" fontWeight={700} sx={{ flexGrow: 1 }}>
-            WhatsApp templates
-          </Typography>
-        </Toolbar>
-      </AppBar>
+    <Box sx={{ minHeight: '100dvh', bgcolor: 'background.default' }}>
+      <MobileAppBar title="WhatsApp templates" onBack={() => navigate('/home')} />
 
-      <Container maxWidth="sm" sx={{ py: 3, pb: 10 }}>
+      <Container maxWidth="sm" sx={{ py: 3, pb: 12 }}>
         <Stack spacing={2}>
           <Typography variant="body2" color="text.secondary">
             Approved templates from your WhatsApp Business dashboard.
           </Typography>
+
+          <Card sx={{ borderColor: 'primary.main', borderWidth: 1, borderStyle: 'solid' }}>
+            <CardActionArea onClick={() => navigate('/templates/custom')}>
+              <CardContent>
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <Box
+                    sx={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: '50%',
+                      bgcolor: 'primary.main',
+                      color: 'primary.contrastText',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <FiEdit3 size={20} />
+                  </Box>
+                  <Box>
+                    <Typography variant="h6">Custom message</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Send a free-form text to groups or contacts
+                    </Typography>
+                  </Box>
+                </Stack>
+              </CardContent>
+            </CardActionArea>
+          </Card>
 
           {isLoading && (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
@@ -51,27 +70,23 @@ export function TemplatesPage() {
             <Alert
               severity="error"
               action={
-                <Typography
-                  component="button"
-                  sx={{ cursor: 'pointer', border: 0, bgcolor: 'transparent' }}
-                  onClick={() => refetch()}
-                >
+                <Button color="inherit" size="small" onClick={() => void refresh()}>
                   Retry
-                </Typography>
+                </Button>
               }
             >
-              {error.message}
+              {error}
             </Alert>
           )}
 
-          {!isLoading && !error && templates?.length === 0 && (
+          {!isLoading && !error && templates.length === 0 && (
             <Alert severity="info">
               No approved templates found. Create and approve templates in Meta Business
               Manager first.
             </Alert>
           )}
 
-          {templates?.map((template) => (
+          {templates.map((template) => (
             <Card key={`${template.name}:${template.language}`}>
               <CardActionArea
                 onClick={() =>
@@ -104,7 +119,7 @@ export function TemplatesPage() {
             </Card>
           ))}
 
-          {isFetching && !isLoading && (
+          {isRefreshing && (
             <Typography variant="caption" color="text.secondary" textAlign="center">
               Refreshing templates...
             </Typography>

@@ -12,6 +12,7 @@ import { ImportContactsPage } from '../pages/import-contacts-page';
 import { LoginPage } from '../pages/login-page';
 import { PhonebookPage } from '../pages/phonebook-page';
 import { RegisterPage } from '../pages/register-page';
+import { SendCustomMessagePage } from '../pages/send-custom-message-page';
 import { SendTemplatePage } from '../pages/send-template-page';
 import { TemplatesPage } from '../pages/templates-page';
 
@@ -82,6 +83,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <SendTemplatePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/templates/custom"
+        element={
+          <ProtectedRoute>
+            <SendCustomMessagePage />
           </ProtectedRoute>
         }
       />

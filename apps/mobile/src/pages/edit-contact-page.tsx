@@ -2,24 +2,23 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Alert,
-  AppBar,
   Box,
   Button,
   CircularProgress,
   Container,
-  IconButton,
   Stack,
-  Toolbar,
-  Typography,
 } from '@mui/material';
-import { FiArrowLeft } from 'react-icons/fi';
 import { ContactForm, type ContactFormValues } from '../components/contact-form';
+import { MobileAppBar } from '../components/mobile-app-bar';
 import { trpc } from '../lib/trpc';
+import { useContactsStore } from '../stores/contacts-store';
 
 export function EditContactPage() {
   const navigate = useNavigate();
   const { id = '' } = useParams();
   const utils = trpc.useUtils();
+  const upsertContact = useContactsStore((state) => state.upsertContact);
+  const removeContact = useContactsStore((state) => state.removeContact);
   const { data: contact, isLoading, error } = trpc.getContact.useQuery(
     { id },
     { enabled: Boolean(id) },
@@ -32,7 +31,7 @@ export function EditContactPage() {
     setErrorMessage(null);
 
     try {
-      await updateContact.mutateAsync({
+      const updated = await updateContact.mutateAsync({
         id,
         data: {
           name: values.name,
@@ -40,7 +39,7 @@ export function EditContactPage() {
           email: values.email || undefined,
         },
       });
-      await utils.listContacts.invalidate();
+      upsertContact(updated);
       await utils.getContactStats.invalidate();
       navigate('/phonebook');
     } catch (error) {
@@ -55,7 +54,7 @@ export function EditContactPage() {
 
     try {
       await deleteContact.mutateAsync({ id });
-      await utils.listContacts.invalidate();
+      removeContact(id);
       await utils.getContactStats.invalidate();
       navigate('/phonebook');
     } catch (error) {
@@ -66,17 +65,8 @@ export function EditContactPage() {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <AppBar position="static" elevation={0} color="transparent">
-        <Toolbar>
-          <IconButton edge="start" onClick={() => navigate('/phonebook')} aria-label="back">
-            <FiArrowLeft />
-          </IconButton>
-          <Typography variant="h6" fontWeight={700}>
-            Edit contact
-          </Typography>
-        </Toolbar>
-      </AppBar>
+    <Box sx={{ minHeight: '100dvh', bgcolor: 'background.default' }}>
+      <MobileAppBar title="Edit contact" onBack={() => navigate('/phonebook')} />
 
       <Container maxWidth="sm" sx={{ py: 3 }}>
         {isLoading && (

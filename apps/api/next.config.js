@@ -13,9 +13,6 @@ require('dotenv').config({
  **/
 const nextConfig = {
   nx: {},
-  experimental: {
-    instrumentationHook: true,
-  },
   serverExternalPackages: [
     'better-auth',
     '@prisma/client',

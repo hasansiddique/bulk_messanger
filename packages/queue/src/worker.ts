@@ -5,7 +5,7 @@ import { WHATSAPP_SEND_QUEUE } from './campaign-service';
 import { processWhatsAppJobData } from './process-job';
 import type { WhatsAppQueueJobData } from './types';
 
-let worker: Worker<WhatsAppQueueJobData> | null = null;
+let worker: Worker | null = null;
 
 export function startWhatsAppWorker() {
   if (worker) {

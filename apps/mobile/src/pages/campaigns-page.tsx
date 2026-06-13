@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import {
   Alert,
-  AppBar,
   Box,
   Card,
   CardActionArea,
@@ -10,13 +9,11 @@ import {
   Chip,
   CircularProgress,
   Container,
-  IconButton,
   LinearProgress,
   Stack,
-  Toolbar,
   Typography,
 } from '@mui/material';
-import { FiArrowLeft } from 'react-icons/fi';
+import { MobileAppBar } from '../components/mobile-app-bar';
 import { trpc } from '../lib/trpc';
 
 const statusColor = {
@@ -34,17 +31,8 @@ export function CampaignsPage() {
   });
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <AppBar position="static" elevation={0} color="transparent">
-        <Toolbar>
-          <IconButton edge="start" onClick={() => navigate('/home')} aria-label="back">
-            <FiArrowLeft />
-          </IconButton>
-          <Typography variant="h6" fontWeight={700}>
-            Sent campaigns
-          </Typography>
-        </Toolbar>
-      </AppBar>
+    <Box sx={{ minHeight: '100dvh', bgcolor: 'background.default' }}>
+      <MobileAppBar title="Sent campaigns" onBack={() => navigate('/home')} />
 
       <Container maxWidth="sm" sx={{ py: 3 }}>
         {isLoading && (

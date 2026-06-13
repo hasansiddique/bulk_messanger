@@ -38,6 +38,7 @@ function buildCorsHeaders(origin: string | null): HeadersInit {
     'Access-Control-Allow-Headers':
       'Content-Type, Authorization, X-Requested-With, trpc-batch-mode, trpc-accept, x-trpc-source',
     'Access-Control-Allow-Credentials': 'true',
+    'Access-Control-Expose-Headers': 'set-auth-token',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',
   };

@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Alert,
-  AppBar,
   Avatar,
   Box,
   Button,
@@ -23,29 +22,24 @@ import {
   ListItemText,
   Stack,
   TextField,
-  Toolbar,
   Typography,
 } from '@mui/material';
-import {
-  FiArrowLeft,
-  FiDownload,
-  FiPlus,
-  FiSearch,
-  FiTrash2,
-} from 'react-icons/fi';
+import { FiDownload, FiPlus, FiSearch, FiTrash2 } from 'react-icons/fi';
+import { MobileAppBar } from '../components/mobile-app-bar';
+import { useContacts } from '../hooks/use-contacts';
 import { trpc } from '../lib/trpc';
+import { useContactsStore } from '../stores/contacts-store';
 
 export function PhonebookPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const utils = trpc.useUtils();
-  const { data: contacts, isLoading, error } = trpc.listContacts.useQuery({
-    search: search.trim() || undefined,
-  });
+  const { contacts, isLoading, error, refresh } = useContacts(search);
+  const removeContact = useContactsStore((state) => state.removeContact);
   const deleteContact = trpc.deleteContact.useMutation({
-    onSuccess: async () => {
-      await utils.listContacts.invalidate();
+    onSuccess: async (_result, variables) => {
+      removeContact(variables.id);
       await utils.getContactStats.invalidate();
       setDeleteTargetId(null);
     },
@@ -68,22 +62,18 @@ export function PhonebookPage() {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <AppBar position="static" elevation={0} color="transparent">
-        <Toolbar>
-          <IconButton edge="start" onClick={() => navigate('/home')} aria-label="back">
-            <FiArrowLeft />
-          </IconButton>
-          <Typography variant="h6" fontWeight={700} sx={{ flexGrow: 1 }}>
-            Phonebook
-          </Typography>
+    <Box sx={{ minHeight: '100dvh', bgcolor: 'background.default' }}>
+      <MobileAppBar
+        title="Phonebook"
+        onBack={() => navigate('/home')}
+        rightAction={
           <IconButton onClick={() => navigate('/phonebook/import')} aria-label="import contacts">
             <FiDownload />
           </IconButton>
-        </Toolbar>
-      </AppBar>
+        }
+      />
 
-      <Container maxWidth="sm" sx={{ py: 3, pb: 10 }}>
+      <Container maxWidth="sm" sx={{ py: 3, pb: 12 }}>
         <Stack spacing={2}>
           <TextField
             placeholder="Search contacts"
@@ -106,12 +96,19 @@ export function PhonebookPage() {
           )}
 
           {error && (
-            <Alert severity="error">
-              {error.message || 'Failed to load contacts.'}
+            <Alert
+              severity="error"
+              action={
+                <Button color="inherit" size="small" onClick={() => void refresh()}>
+                  Retry
+                </Button>
+              }
+            >
+              {error}
             </Alert>
           )}
 
-          {!isLoading && !error && contacts?.length === 0 && (
+          {!isLoading && !error && contacts.length === 0 && (
             <Stack spacing={2} sx={{ py: 4 }}>
               <Typography color="text.secondary" textAlign="center">
                 {emptyMessage}
@@ -125,30 +122,38 @@ export function PhonebookPage() {
             </Stack>
           )}
 
-          {!isLoading && contacts && contacts.length > 0 && (
+          {!isLoading && !error && contacts.length > 0 && (
             <List
+              disablePadding
               sx={{
                 bgcolor: 'background.paper',
                 borderRadius: 2,
                 border: '1px solid',
                 borderColor: 'divider',
+                overflow: 'hidden',
               }}
             >
-              {contacts.map((contact) => (
+              {contacts.map((contact, index) => (
                 <ListItem
                   key={contact.id}
                   disablePadding
+                  divider={index < contacts.length - 1}
                   secondaryAction={
                     <IconButton
                       edge="end"
                       aria-label={`delete ${contact.name}`}
                       onClick={() => setDeleteTargetId(contact.id)}
+                      sx={{ mr: 0.5 }}
                     >
                       <FiTrash2 />
                     </IconButton>
                   }
+                  sx={{ alignItems: 'stretch' }}
                 >
-                  <ListItemButton onClick={() => navigate(`/phonebook/${contact.id}/edit`)}>
+                  <ListItemButton
+                    onClick={() => navigate(`/phonebook/${contact.id}/edit`)}
+                    sx={{ py: 1.5, pr: 7 }}
+                  >
                     <ListItemAvatar>
                       <Avatar sx={{ bgcolor: 'primary.main' }}>
                         {contact.name.charAt(0).toUpperCase()}
@@ -162,12 +167,14 @@ export function PhonebookPage() {
                           {contact.email ? ` · ${contact.email}` : ''}
                         </>
                       }
+                      primaryTypographyProps={{ fontWeight: 600 }}
                     />
                   </ListItemButton>
                 </ListItem>
               ))}
             </List>
           )}
+
         </Stack>
       </Container>
 
@@ -177,8 +184,8 @@ export function PhonebookPage() {
         onClick={() => navigate('/phonebook/new')}
         sx={{
           position: 'fixed',
-          bottom: 24,
-          right: 24,
+          bottom: 'calc(24px + env(safe-area-inset-bottom))',
+          right: 'calc(24px + env(safe-area-inset-right))',
         }}
       >
         <FiPlus size={24} />

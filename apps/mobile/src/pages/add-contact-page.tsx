@@ -2,21 +2,19 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Alert,
-  AppBar,
   Box,
   Container,
-  IconButton,
   Stack,
-  Toolbar,
-  Typography,
 } from '@mui/material';
-import { FiArrowLeft } from 'react-icons/fi';
 import { ContactForm, type ContactFormValues } from '../components/contact-form';
+import { MobileAppBar } from '../components/mobile-app-bar';
 import { trpc } from '../lib/trpc';
+import { useContactsStore } from '../stores/contacts-store';
 
 export function AddContactPage() {
   const navigate = useNavigate();
   const utils = trpc.useUtils();
+  const upsertContact = useContactsStore((state) => state.upsertContact);
   const createContact = trpc.createContact.useMutation();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -24,12 +22,12 @@ export function AddContactPage() {
     setErrorMessage(null);
 
     try {
-      await createContact.mutateAsync({
+      const contact = await createContact.mutateAsync({
         name: values.name,
         phoneNumber: values.phoneNumber,
         email: values.email || undefined,
       });
-      await utils.listContacts.invalidate();
+      upsertContact(contact);
       await utils.getContactStats.invalidate();
       navigate('/phonebook');
     } catch (error) {
@@ -40,17 +38,8 @@ export function AddContactPage() {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <AppBar position="static" elevation={0} color="transparent">
-        <Toolbar>
-          <IconButton edge="start" onClick={() => navigate('/phonebook')} aria-label="back">
-            <FiArrowLeft />
-          </IconButton>
-          <Typography variant="h6" fontWeight={700}>
-            Add contact
-          </Typography>
-        </Toolbar>
-      </AppBar>
+    <Box sx={{ minHeight: '100dvh', bgcolor: 'background.default' }}>
+      <MobileAppBar title="Add contact" onBack={() => navigate('/phonebook')} />
 
       <Container maxWidth="sm" sx={{ py: 3 }}>
         <Stack spacing={2}>

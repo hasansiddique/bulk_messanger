@@ -1,5 +1,5 @@
 import { Capacitor } from '@capacitor/core';
-import { Contacts } from '@capacitor-community/contacts';
+import { CapacitorContacts, type Contact } from '@capgo/capacitor-contacts';
 import { normalizePhoneNumber, isValidPhoneNumber } from './phone-numbers';
 
 export type DeviceContact = {
@@ -13,26 +13,22 @@ export function isNativeContactsAvailable(): boolean {
   return Capacitor.isNativePlatform();
 }
 
-function getContactName(contact: {
-  name?: { display?: string | null; given?: string | null; family?: string | null } | null;
-}): string {
-  const display = contact.name?.display?.trim();
-  if (display) {
-    return display;
+function getContactName(contact: Contact): string {
+  const fullName = contact.fullName?.trim();
+  if (fullName) {
+    return fullName;
   }
 
-  const given = contact.name?.given?.trim() ?? '';
-  const family = contact.name?.family?.trim() ?? '';
+  const given = contact.givenName?.trim() ?? '';
+  const family = contact.familyName?.trim() ?? '';
   const combined = `${given} ${family}`.trim();
 
   return combined || 'Unknown contact';
 }
 
-function getPrimaryPhone(contact: {
-  phones?: Array<{ number?: string | null }> | null;
-}): string | null {
-  for (const phone of contact.phones ?? []) {
-    const normalized = normalizePhoneNumber(phone.number ?? '');
+function getPrimaryPhone(contact: Contact): string | null {
+  for (const phone of contact.phoneNumbers ?? []) {
+    const normalized = normalizePhoneNumber(phone.value ?? '');
     if (isValidPhoneNumber(normalized)) {
       return normalized;
     }
@@ -41,24 +37,25 @@ function getPrimaryPhone(contact: {
   return null;
 }
 
-function getPrimaryEmail(contact: {
-  emails?: Array<{ address?: string | null }> | null;
-}): string | undefined {
-  const email = contact.emails?.find((item) => item.address?.trim())?.address?.trim();
+function getPrimaryEmail(contact: Contact): string | undefined {
+  const email = contact.emailAddresses?.find((item) => item.value?.trim())?.value?.trim();
   return email || undefined;
 }
 
 export async function ensureContactsPermission(): Promise<
   'granted' | 'denied' | 'prompt' | 'limited'
 > {
-  const current = await Contacts.checkPermissions();
+  const current = await CapacitorContacts.checkPermissions();
 
-  if (current.contacts === 'granted' || current.contacts === 'limited') {
-    return current.contacts;
+  if (current.readContacts === 'granted' || current.readContacts === 'limited') {
+    return current.readContacts;
   }
 
-  const requested = await Contacts.requestPermissions();
-  return requested.contacts;
+  const requested = await CapacitorContacts.requestPermissions({
+    permissions: ['readContacts'],
+  });
+
+  return requested.readContacts;
 }
 
 export async function loadDeviceContacts(): Promise<DeviceContact[]> {
@@ -72,12 +69,15 @@ export async function loadDeviceContacts(): Promise<DeviceContact[]> {
     throw new Error('Contacts permission was denied. Enable it in device settings.');
   }
 
-  const result = await Contacts.getContacts({
-    projection: {
-      name: true,
-      phones: true,
-      emails: true,
-    },
+  const result = await CapacitorContacts.getContacts({
+    fields: [
+      'id',
+      'fullName',
+      'givenName',
+      'familyName',
+      'phoneNumbers',
+      'emailAddresses',
+    ],
   });
 
   const contacts: DeviceContact[] = [];
@@ -85,14 +85,15 @@ export async function loadDeviceContacts(): Promise<DeviceContact[]> {
 
   for (const contact of result.contacts) {
     const phoneNumber = getPrimaryPhone(contact);
+    const deviceContactId = contact.id?.trim();
 
-    if (!phoneNumber || seenNumbers.has(phoneNumber)) {
+    if (!phoneNumber || !deviceContactId || seenNumbers.has(phoneNumber)) {
       continue;
     }
 
     seenNumbers.add(phoneNumber);
     contacts.push({
-      deviceContactId: contact.contactId,
+      deviceContactId,
       name: getContactName(contact),
       phoneNumber,
       email: getPrimaryEmail(contact),

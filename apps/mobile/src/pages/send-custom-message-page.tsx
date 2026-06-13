@@ -1,12 +1,11 @@
 import { useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Alert,
   Box,
   Button,
   Card,
   CardContent,
-  Chip,
   CircularProgress,
   Container,
   FormControl,
@@ -25,36 +24,16 @@ import { MobileAppBar } from '../components/mobile-app-bar';
 import { useContacts } from '../hooks/use-contacts';
 import { trpc } from '../lib/trpc';
 
-type TemplateState = {
-  template: {
-    name: string;
-    language: string;
-    preview: string;
-    category: string | null;
-    variables: Array<{
-      component: 'body' | 'header';
-      index: number;
-      label: string;
-    }>;
-  };
-};
-
-export function SendTemplatePage() {
+export function SendCustomMessagePage() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const templateState = location.state as TemplateState | null;
-  const template = templateState?.template;
-
   const { data: groups } = trpc.listContactGroups.useQuery();
   const { allContacts: contacts } = useContacts();
-  const sendCampaign = trpc.sendWhatsAppTemplateCampaign.useMutation();
+  const sendMessage = trpc.sendWhatsAppMessage.useMutation();
 
+  const [message, setMessage] = useState('');
   const [groupId, setGroupId] = useState('');
   const [selectedContactIds, setSelectedContactIds] = useState<Set<string>>(new Set());
-  const [variableValues, setVariableValues] = useState<Record<string, string>>({});
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-
-  const variableFields = useMemo(() => template?.variables ?? [], [template]);
 
   const recipientCount = useMemo(() => {
     const phoneNumbers = new Set<string>();
@@ -91,108 +70,59 @@ export function SendTemplatePage() {
   };
 
   const handleSend = async () => {
-    if (!template) {
+    setStatusMessage(null);
+
+    if (!message.trim()) {
+      setStatusMessage('Write a message before sending.');
       return;
     }
-
-    setStatusMessage(null);
 
     if (!groupId && selectedContactIds.size === 0) {
       setStatusMessage('Select a group or at least one contact.');
       return;
     }
 
-    const missingVariable = variableFields.find((variable) => {
-      const key = `${variable.component}:${variable.index}`;
-      return !variableValues[key]?.trim();
-    });
-
-    if (missingVariable) {
-      setStatusMessage(`Fill in ${missingVariable.label}.`);
-      return;
-    }
-
     try {
-      const result = await sendCampaign.mutateAsync({
-        templateName: template.name,
-        language: template.language,
+      const result = await sendMessage.mutateAsync({
+        message: message.trim(),
         groupId: groupId || undefined,
         contactIds: [...selectedContactIds],
-        variables: variableFields.map((variable) => ({
-          component: variable.component,
-          index: variable.index,
-          value: variableValues[`${variable.component}:${variable.index}`].trim(),
-        })),
       });
 
       navigate(`/campaigns/${result.id}`);
     } catch (error) {
       setStatusMessage(
-        error instanceof Error ? error.message : 'Failed to send template campaign.',
+        error instanceof Error ? error.message : 'Failed to send messages.',
       );
     }
   };
 
-  if (!template) {
-    return (
-      <Container maxWidth="sm" sx={{ py: 6 }}>
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          No template selected. Choose a template first.
-        </Alert>
-        <Button variant="contained" onClick={() => navigate('/templates')}>
-          Browse templates
-        </Button>
-      </Container>
-    );
-  }
-
   return (
     <Box sx={{ minHeight: '100dvh', bgcolor: 'background.default' }}>
-      <MobileAppBar title="Send template" onBack={() => navigate('/templates')} />
+      <MobileAppBar title="Custom message" onBack={() => navigate('/templates')} />
 
       <Container maxWidth="sm" sx={{ py: 3, pb: 12 }}>
         <Stack spacing={3}>
-          <Card>
+          <Card variant="outlined">
             <CardContent>
-              <Stack spacing={1}>
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  <Typography variant="h6">{template.name}</Typography>
-                  <Chip label={template.language} size="small" />
-                </Stack>
-                <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
-                  {template.preview}
-                </Typography>
-              </Stack>
+              <Typography variant="body2" color="text.secondary">
+                Send a free-form text message. Recipients must have an open WhatsApp
+                session with your business number (24-hour window).
+              </Typography>
             </CardContent>
           </Card>
 
-          {variableFields.length > 0 && (
-            <Box>
-              <Typography variant="h6" gutterBottom>
-                Template variables
-              </Typography>
-              <Stack spacing={2}>
-                {variableFields.map((variable) => {
-                  const key = `${variable.component}:${variable.index}`;
-
-                  return (
-                    <TextField
-                      key={key}
-                      label={variable.label}
-                      value={variableValues[key] ?? ''}
-                      onChange={(event) =>
-                        setVariableValues((current) => ({
-                          ...current,
-                          [key]: event.target.value,
-                        }))
-                      }
-                      fullWidth
-                    />
-                  );
-                })}
-              </Stack>
-            </Box>
-          )}
+          <TextField
+            label="Message"
+            placeholder="Type your WhatsApp message..."
+            value={message}
+            onChange={(event) => setMessage(event.target.value)}
+            multiline
+            minRows={6}
+            fullWidth
+            inputProps={{ maxLength: 4096 }}
+            helperText={`${message.length}/4096`}
+          />
 
           <Box>
             <Typography variant="h6" gutterBottom>
@@ -252,10 +182,10 @@ export function SendTemplatePage() {
             variant="contained"
             size="large"
             onClick={handleSend}
-            disabled={sendCampaign.isPending || recipientCount === 0}
+            disabled={sendMessage.isPending || recipientCount === 0}
             fullWidth
           >
-            {sendCampaign.isPending ? (
+            {sendMessage.isPending ? (
               <CircularProgress size={24} color="inherit" />
             ) : (
               `Send to ${recipientCount} recipient${recipientCount === 1 ? '' : 's'}`
@@ -265,10 +195,10 @@ export function SendTemplatePage() {
           {statusMessage && (
             <Alert
               severity={
-                sendCampaign.isError ||
+                sendMessage.isError ||
                 statusMessage.includes('Failed') ||
                 statusMessage.includes('Select') ||
-                statusMessage.includes('Fill')
+                statusMessage.includes('Write')
                   ? 'error'
                   : 'success'
               }
@@ -276,7 +206,6 @@ export function SendTemplatePage() {
               {statusMessage}
             </Alert>
           )}
-
         </Stack>
       </Container>
     </Box>

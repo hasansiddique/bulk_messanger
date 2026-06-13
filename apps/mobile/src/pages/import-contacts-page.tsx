@@ -2,14 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Alert,
-  AppBar,
   Box,
   Button,
   Checkbox,
   CircularProgress,
   Container,
   FormControlLabel,
-  IconButton,
   InputAdornment,
   List,
   ListItem,
@@ -18,10 +16,11 @@ import {
   ListItemText,
   Stack,
   TextField,
-  Toolbar,
   Typography,
 } from '@mui/material';
-import { FiArrowLeft, FiSearch } from 'react-icons/fi';
+import { FiSearch } from 'react-icons/fi';
+import { MobileAppBar } from '../components/mobile-app-bar';
+import { useContacts } from '../hooks/use-contacts';
 import {
   isNativeContactsAvailable,
   loadDeviceContacts,
@@ -32,6 +31,7 @@ import { trpc } from '../lib/trpc';
 export function ImportContactsPage() {
   const navigate = useNavigate();
   const utils = trpc.useUtils();
+  const { refresh: refreshContacts } = useContacts();
   const importContacts = trpc.importContacts.useMutation();
   const [deviceContacts, setDeviceContacts] = useState<DeviceContact[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -153,7 +153,7 @@ export function ImportContactsPage() {
         skipDuplicates: true,
       });
 
-      await utils.listContacts.invalidate();
+      await refreshContacts();
       await utils.getContactStats.invalidate();
 
       setStatusMessage(
@@ -171,17 +171,8 @@ export function ImportContactsPage() {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <AppBar position="static" elevation={0} color="transparent">
-        <Toolbar>
-          <IconButton edge="start" onClick={() => navigate('/phonebook')} aria-label="back">
-            <FiArrowLeft />
-          </IconButton>
-          <Typography variant="h6" fontWeight={700} sx={{ flexGrow: 1 }}>
-            Import contacts
-          </Typography>
-        </Toolbar>
-      </AppBar>
+    <Box sx={{ minHeight: '100dvh', bgcolor: 'background.default' }}>
+      <MobileAppBar title="Import contacts" onBack={() => navigate('/phonebook')} />
 
       <Container maxWidth="sm" sx={{ py: 3, pb: 12 }}>
         <Stack spacing={2}>

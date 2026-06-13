@@ -2,22 +2,20 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Alert,
-  AppBar,
   Box,
   Button,
   CircularProgress,
   Container,
-  IconButton,
   Stack,
   TextField,
-  Toolbar,
   Typography,
 } from '@mui/material';
-import { FiArrowLeft } from 'react-icons/fi';
 import {
   ContactPicker,
   SelectAllContactsControl,
 } from '../components/contact-picker';
+import { MobileAppBar } from '../components/mobile-app-bar';
+import { useContacts } from '../hooks/use-contacts';
 import { trpc } from '../lib/trpc';
 
 export function GroupFormPage() {
@@ -30,7 +28,7 @@ export function GroupFormPage() {
     { id: id ?? '' },
     { enabled: isEditing },
   );
-  const { data: contacts } = trpc.listContacts.useQuery();
+  const { allContacts: contacts } = useContacts();
   const createGroup = trpc.createContactGroup.useMutation();
   const updateGroup = trpc.updateContactGroup.useMutation();
 
@@ -96,17 +94,11 @@ export function GroupFormPage() {
   const isPending = createGroup.isPending || updateGroup.isPending;
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <AppBar position="static" elevation={0} color="transparent">
-        <Toolbar>
-          <IconButton edge="start" onClick={() => navigate('/groups')} aria-label="back">
-            <FiArrowLeft />
-          </IconButton>
-          <Typography variant="h6" fontWeight={700}>
-            {isEditing ? 'Edit group' : 'New group'}
-          </Typography>
-        </Toolbar>
-      </AppBar>
+    <Box sx={{ minHeight: '100dvh', bgcolor: 'background.default' }}>
+      <MobileAppBar
+        title={isEditing ? 'Edit group' : 'New group'}
+        onBack={() => navigate('/groups')}
+      />
 
       <Container maxWidth="sm" sx={{ py: 3, pb: 12 }}>
         {isLoading && isEditing ? (

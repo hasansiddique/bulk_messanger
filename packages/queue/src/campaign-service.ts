@@ -12,7 +12,7 @@ import type {
 
 export const WHATSAPP_SEND_QUEUE = 'whatsapp-send';
 
-let queue: Queue<WhatsAppQueueJobData> | null = null;
+let queue: Queue | null = null;
 
 export function getWhatsAppQueue() {
   if (!queue) {
