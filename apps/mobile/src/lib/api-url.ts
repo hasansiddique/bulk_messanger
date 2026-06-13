@@ -1,23 +1,36 @@
 import { Capacitor } from '@capacitor/core';
 
+function normalizeApiBaseUrl(url: string) {
+  const trimmed = url.trim().replace(/\/$/, '');
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  // Railway and most hosted APIs require HTTPS
+  return `https://${trimmed}`;
+}
+
 /**
  * Resolves the API base URL for the mobile app.
  *
- * - When loaded over http(s) (Vite dev / live reload), use same origin + proxy.
- * - On native Capacitor (capacitor://), call the host machine API directly.
+ * - When VITE_API_URL is set (Railway, LAN IP, etc.), use it everywhere.
+ * - Otherwise, in Vite dev (http://localhost:4300), use same origin + proxy to local API.
+ * - On native Capacitor (capacitor://), fall back to platform defaults.
  */
 export function getApiBaseUrl(): string {
+  const configured = import.meta.env.VITE_API_URL?.trim();
+
+  if (configured) {
+    return normalizeApiBaseUrl(configured);
+  }
+
   if (typeof window !== 'undefined') {
     const { protocol, origin } = window.location;
 
     if (protocol === 'http:' || protocol === 'https:') {
       return origin;
     }
-  }
-
-  const configured = import.meta.env.VITE_API_URL;
-  if (configured) {
-    return configured;
   }
 
   if (Capacitor.getPlatform() === 'android') {
