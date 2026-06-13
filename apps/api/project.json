@@ -19,6 +19,14 @@
         "cwd": "apps/api",
         "command": "next dev --webpack -p 3000"
       }
+    },
+    "start": {
+      "dependsOn": ["build"],
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/api",
+        "command": "next start --hostname 0.0.0.0 --port ${PORT:-3000}"
+      }
     }
   }
 }
