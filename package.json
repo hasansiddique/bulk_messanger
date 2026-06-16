@@ -20,6 +20,7 @@
     "mobile:sync:dev": "CAPACITOR_LIVE_RELOAD=true nx run mobile:cap-sync",
     "mobile:ios": "nx run mobile:cap-open-ios",
     "mobile:android": "nx run mobile:cap-open-android",
+    "mobile:install:android": "sh apps/mobile/android/install-debug.sh",
     "mobile:add-ios": "nx run mobile:cap-add-ios",
     "mobile:add-android": "nx run mobile:cap-add-android"
   },
